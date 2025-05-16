@@ -1,4 +1,5 @@
 import math
+from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -33,11 +34,13 @@ vzpoints = np.array([])
 
 G = 6.6743e-20 # in km^3 / kg s^2
 dt = 86400 # in seconds
-total_time = 15768000 * 2
-ax, ay = 0, 0
+time_start = 0
+time_final = 15768000 * 2
 entity = orbital_entities[1]
 i = 0
-for t in range(0, total_time, dt):
+"""
+i = 0
+for t in range(0, time_final, dt):
     xpoints = np.append(xpoints, [entity.x])
     ypoints = np.append(ypoints, [entity.y])
     vxpoints = np.append(vxpoints, [entity.vx])
@@ -60,13 +63,54 @@ for t in range(0, total_time, dt):
 
 print(xpoints)
 print(ypoints)
+"""
 fig, ax = plt.subplots()
+#ax = fig.add_subplot(projection='3d')
+ln, = ax.plot([], [])
 
-#ax.plot(np.arange(0, total_time, dt), vxpoints, "b", label="vx")
-#ax.plot(np.arange(0, total_time, dt), vypoints, "r", label="vy")
-ax.scatter(xpoints, ypoints)
+def init():
+    ax.set_xlim(-149597871, 149597871)
+    ax.set_ylim(-149597871, 149597871)
+    return ln,
 
-ax.legend()
+def update(frame):
+    global xpoints
+    global ypoints
+    global vxpoints
+    global vypoints
+    t = frame
+    xpoints = np.append(xpoints, [entity.x])
+    ypoints = np.append(ypoints, [entity.y])
+    vxpoints = np.append(vxpoints, [entity.vx])
+    vypoints = np.append(vypoints, [entity.vy])
+    print(f'(x: {entity.x}, y: {entity.y}) , (vx: {entity.vx}, vy: {entity.vy})')
+
+    # Drift
+    entity.x = entity.x + (entity.vx * dt)
+    entity.y = entity.y + (entity.vy * dt)
+
+    # Kick
+    rx = entity.x - orbital_entities[0].x
+    ry = entity.y - orbital_entities[0].y
+    r_mag = math.sqrt(rx * rx + ry * ry)
+    a = (-1) * G * orbital_entities[0].mass / (r_mag ** 2)
+    entity.vx = entity.vx + a * (rx / r_mag) * dt
+    entity.vy = entity.vy + a * (ry / r_mag) * dt
+
+    ln.set_data(xpoints, ypoints)
+    return ln,
+
+ani = FuncAnimation(fig, update, frames=np.arange(time_start, time_final, dt), init_func=init, blit=True, interval=5, repeat=False)
+#ax.plot(np.arange(0, time_final, dt), vxpoints, "b", label="vx")
+#ax.plot(np.arange(0, time_final, dt), vypoints, "r", label="vy")
+#ax.scatter(xpoints, ypoints)
+#ax.set_facecolor((0, 0, 0))
+#fig.set_facecolor((0, 0, 0))
+
+
+ax.grid()
+#ax.legend()
 plt.show()
+
 
 
