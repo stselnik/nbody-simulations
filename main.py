@@ -65,8 +65,8 @@ print(xpoints)
 print(ypoints)
 """
 fig, ax = plt.subplots()
-#ax = fig.add_subplot(projection='3d')
-ln, = ax.plot([], [])
+ax = fig.add_subplot(projection='3d')
+ln, = ax.plot([], [], [])
 
 def init():
     ax.set_xlim(-149597871, 149597871)
@@ -76,11 +76,13 @@ def init():
 def update(frame):
     global xpoints
     global ypoints
+    global zpoints
     global vxpoints
     global vypoints
     t = frame
     xpoints = np.append(xpoints, [entity.x])
     ypoints = np.append(ypoints, [entity.y])
+    zpoints = np.append(zpoints, [0])
     vxpoints = np.append(vxpoints, [entity.vx])
     vypoints = np.append(vypoints, [entity.vy])
     print(f'(x: {entity.x}, y: {entity.y}) , (vx: {entity.vx}, vy: {entity.vy})')
@@ -97,7 +99,7 @@ def update(frame):
     entity.vx = entity.vx + a * (rx / r_mag) * dt
     entity.vy = entity.vy + a * (ry / r_mag) * dt
 
-    ln.set_data(xpoints, ypoints)
+    ln.set_data_3d(xpoints, ypoints, zpoints)
     return ln,
 
 ani = FuncAnimation(fig, update, frames=np.arange(time_start, time_final, dt), init_func=init, blit=True, interval=5, repeat=False)
