@@ -6,7 +6,7 @@ import requests
 import re
 
 class OrbitalEntity:
-    def __init__(self, name, x, y, z, vx, vy, vz, mass, ax):
+    def __init__(self, name, x, y, z, vx, vy, vz, mass, ax, color=""):
         self.name = name
         self.x = x
         self.y = y
@@ -18,7 +18,7 @@ class OrbitalEntity:
         self.xpoints = np.array([])
         self.ypoints = np.array([])
         self.zpoints = np.array([])
-        self.ln, = ax.plot([], [], [])
+        self.ln, = ax.plot([], [], [], color,label=name)
 
     def __str__(self):
         return f"Position: ({self.x}, {self.y}, {self.z}), Velocity: ({self.vx}, {self.vy}, {self.vx}) , Mass: {self.mass}"
@@ -29,7 +29,7 @@ ax = fig.add_subplot(projection='3d')
 
 orbital_entities = []
 
-def add_orbital_entity(name, horizon_id, mass, ax):
+def add_orbital_entity(name, horizon_id, mass, ax, color=""):
     # Fetch all values for 
     # Define the time span:
     start_time = '2025-05-17'
@@ -45,18 +45,18 @@ def add_orbital_entity(name, horizon_id, mass, ax):
     values = re.split('X|Y|Z|VX|VY|VZ|=|\n| ', data)
     values = list(map((lambda x: float(x)), filter(lambda x: x != '', values)))
     print(values)
-    orbital_entities.append(OrbitalEntity(name, values[0], values[1], values[2], values[3], values[4], values[5], mass, ax))
+    orbital_entities.append(OrbitalEntity(name, values[0], values[1], values[2], values[3], values[4], values[5], mass, ax, color))
 
-add_orbital_entity("Sun", 10, 1.989e30, ax)
-add_orbital_entity("Mercury", 199, 3.302e23, ax)
-add_orbital_entity("Venus", 299, 48.685e23, ax)
-add_orbital_entity("Earth", 399, 5.972e24, ax)
-add_orbital_entity("Mars", 499, 6.4171e23, ax)
-add_orbital_entity("Jupiter", 599, 18.9819e26, ax)
-add_orbital_entity("Saturn", 699, 5.6834e26, ax)
-add_orbital_entity("Uranus", 799, 86.813e23, ax)
-add_orbital_entity("Neptune", 899, 102.409e24, ax)
-add_orbital_entity("Pluto", 999, 1.307e22, ax)
+add_orbital_entity("Sun", 10, 1.989e30, ax, "#F9CA0B")
+add_orbital_entity("Mercury", 199, 3.302e23, ax, "#9FC8E2")
+add_orbital_entity("Venus", 299, 48.685e23, ax, "#ECA72F")
+add_orbital_entity("Earth", 399, 5.972e24, ax, "#46B1CE")
+add_orbital_entity("Mars", 499, 6.4171e23, ax, "#EE614E")
+add_orbital_entity("Jupiter", 599, 18.9819e26, ax, "#EDBA76")
+add_orbital_entity("Saturn", 699, 5.6834e26, ax, "#F4E27F")
+add_orbital_entity("Uranus", 799, 86.813e23, ax, "#B9EEF1")
+add_orbital_entity("Neptune", 899, 102.409e24, ax, "#4B80E4")
+add_orbital_entity("Pluto", 999, 1.307e22, ax, "#FFC8B7")
 
 
 
@@ -144,7 +144,7 @@ ani = FuncAnimation(fig, update, frames=np.arange(time_start, time_final * 166, 
 #ax.scatter(xpoints, ypoints)
 #ax.set_facecolor((0, 0, 0))
 #fig.set_facecolor((0, 0, 0))
-
+#ax.set_axis_off()
 
 #ax.grid()
 ax.legend()
