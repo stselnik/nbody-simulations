@@ -1,10 +1,16 @@
 import math
 import time
-from matplotlib.animation import FuncAnimation
-import matplotlib.pyplot as plt
+import tkinter
 import numpy as np
 import requests
 import re
+from matplotlib.animation import FuncAnimation
+import matplotlib.pyplot as plt
+# Implement the default Matplotlib key bindings.
+from matplotlib.backend_bases import key_press_handler
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
+                                               NavigationToolbar2Tk)
+from matplotlib.figure import Figure
 
 class OrbitalEntity:
     def __init__(self, name, x, y, z, vx, vy, vz, mass, ax, color=""):
@@ -25,6 +31,8 @@ class OrbitalEntity:
     def __str__(self):
         return f"Position: ({self.x}, {self.y}, {self.z}), Velocity: ({self.vx}, {self.vy}, {self.vx}) , Mass: {self.mass}"
 
+root = tkinter.Tk()
+root.wm_title("N-Body Solar System Simulator")
 
 fig, ax = plt.subplots()
 ax = fig.add_subplot(projection='3d')
@@ -32,12 +40,6 @@ ax = fig.add_subplot(projection='3d')
 orbital_entities = []
 # Keep track of execution time to debug
 process_times = np.array([]) 
-"""
-
-Avg Time for 365 day (1yr) per frame, 182 day trail simulation (No shared calculation for force):  0.04892499701492541
-
-"""
-
 def add_orbital_entity(name, horizon_id, mass, ax, color=""):
     # Fetch all values for 
     # Define the time span:
@@ -67,15 +69,20 @@ add_orbital_entity("Uranus", 799, 86.813e23, ax, "#B9EEF1")
 add_orbital_entity("Neptune", 899, 102.409e24, ax, "#4B80E4")
 add_orbital_entity("Pluto", 999, 1.307e22, ax, "#FFC8B7")
 
+
+
+canvas = FigureCanvasTkAgg(fig, master=root)
+canvas.draw()
+
+toolbar = NavigationToolbar2Tk(canvas, root, pack_toolbar=True)
+toolbar.update()
+
 G = 6.6743e-20 # in km^3 / kg s^2
 dt = 86400 # in seconds
 time_start = 0
 time_final = 15768000 * 2
-entity = orbital_entities[1]
 i = 0
 
-ln, = ax.plot([], [], [])
-ln2, = ax.plot([], [], [])
 
 def all_entity_lines():
     lines  = []
@@ -144,7 +151,7 @@ def multiple_orbit(t):
     return all_entity_lines()
 
 
-ani = FuncAnimation(fig, update, frames=np.arange(time_start, time_final * 166, dt), init_func=init, blit=False, interval=0.1, repeat=False)
+ani = FuncAnimation(fig, update, frames=np.arange(time_start, time_final * 166, dt), init_func=init, blit=True, interval=0.1, repeat=False)
 #ax.plot(np.arange(0, time_final, dt), vxpoints, "b", label="vx")
 #ax.plot(np.arange(0, time_final, dt), vypoints, "r", label="vy")
 #ax.scatter(xpoints, ypoints)
@@ -154,6 +161,12 @@ ani = FuncAnimation(fig, update, frames=np.arange(time_start, time_final * 166, 
 
 #ax.grid()
 ax.legend()
-plt.show()
+#plt.show()
+
+
+toolbar.pack(side=tkinter.BOTTOM, fill=tkinter.X)
+canvas.get_tk_widget().pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=True)
+
+tkinter.mainloop()
 
 
