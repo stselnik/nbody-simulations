@@ -1,5 +1,7 @@
 import math
+import datetime
 import re
+from datetime import datetime, timedelta
 from tkinter import *
 from tkinter import ttk
 from matplotlib.animation import FuncAnimation
@@ -52,8 +54,12 @@ class NBodySolarSystem:
         self.orbital_entities.append(self.OrbitalEntity(name, values[0], values[1], values[2], values[3], values[4], values[5], mass, ax, color))
 
     def create_simulation(self, start_date):
-        print(start_date)
-        
+        print("Running simulation beggining at: ", start_date)
+        self.simulation_time.set(start_date)
+
+        if (len(plt.get_fignums()) != 0):
+            plt.close()
+
          # Initialize Matplotlib Plots
         fig, ax = plt.subplots()
         ax = fig.add_subplot(projection='3d')
@@ -89,7 +95,9 @@ class NBodySolarSystem:
         
         def multiple_orbit(frame):
             t = frame
+            days = 0
             for iteration in range(0, self.iterations.get()):
+                days += 1
                 # Drift (Move each orbital entity)
                 for i in range(0, len(self.orbital_entities)):
                     entity = self.orbital_entities[i]
@@ -97,10 +105,11 @@ class NBodySolarSystem:
                     entity.xpoints = np.append(entity.xpoints, [entity.x])
                     entity.ypoints = np.append(entity.ypoints, [entity.y])
                     entity.zpoints = np.append(entity.zpoints, [0])
-                    if (len(entity.xpoints) > self.trail.get()):
+                    while (len(entity.xpoints) > self.trail.get()):
                         entity.xpoints = np.delete(entity.xpoints, 0)
                         entity.ypoints = np.delete(entity.ypoints, 0)
                         entity.zpoints = np.delete(entity.zpoints, 0)
+                    
                     entity.x = entity.x + (entity.vx * dt)
                     entity.y = entity.y + (entity.vy * dt)
                     entity.z = entity.z + (entity.vz * dt)
@@ -126,17 +135,22 @@ class NBodySolarSystem:
                         e2.a[0] += F / e2.mass * (-1 * rx / r_mag) * dt
                         e2.a[1] += F / e2.mass * (-1 * ry / r_mag) * dt
                         e2.a[2] += F / e2.mass * (-1 * rz / r_mag) * dt
+                    # Increment velocities
                     e.vx += e.a[0]
                     e.vy += e.a[1]
                     e.vz += e.a[2]
                     e.ln.set_data_3d(e.xpoints, e.ypoints, e.zpoints)
+            # Update Date in Simulation on Menu
+            previous_date = datetime.strptime(self.simulation_time.get(), "%Y-%m-%d")
+            new_date = previous_date + timedelta(days=days)
+            self.simulation_time.set(new_date.strftime("%Y-%m-%d"))
             return all_entity_lines()
         # Run Animation
         ani = FuncAnimation(fig, multiple_orbit, frames=np.arange(time_start, time_final * 166, dt), init_func=init, blit=False, interval=0.1, repeat=False)
         # Adjust Plot Appearance
         ax.legend()
 
-        plt.show()
+        plt.show(block=True)
 
 
     def __init__(self, root):
@@ -160,33 +174,23 @@ class NBodySolarSystem:
         self.trail = IntVar(value=(int(365/2)))
         trail_entry = ttk.Entry(mainframe, width=7, textvariable=self.trail)
 
-        ttk.Button(mainframe, text="Run Simulation", command=lambda:self.create_simulation(start_date=self.date.get()))
+        self.simulation_time = StringVar()
 
-       
-        self.feet = StringVar()
-        feet_entry = ttk.Entry(mainframe, width=7, textvariable=self.feet)
-        feet_entry.grid(column=2, row=1, sticky=(W, E))
-        self.meters = StringVar()
+        def handle_simulation_button_press():
+            run_simulation_button.config(state='disabled')
+            self.create_simulation(start_date=self.date.get())
 
-        ttk.Label(mainframe, textvariable=self.meters).grid(column=2, row=2, sticky=(W, E))
-        ttk.Button(mainframe, text="Calculate", command=self.calculate).grid(column=3, row=3, sticky=W)
+        run_simulation_button = ttk.Button(mainframe, text="Run Simulation", command=handle_simulation_button_press)
 
-        ttk.Label(mainframe, text="feet").grid(column=3, row=1, sticky=W)
-        ttk.Label(mainframe, text="is equivalent to").grid(column=1, row=2, sticky=E)
-        ttk.Label(mainframe, text="meters").grid(column=3, row=2, sticky=W)
+        ttk.Label(mainframe, text="Date in Simulation:").grid(column=1)
+        ttk.Label(mainframe, textvariable=self.simulation_time).grid(column=1)
 
         for child in mainframe.winfo_children(): 
             child.grid_configure(padx=5, pady=5)
 
-        feet_entry.focus()
-        root.bind("<Return>", self.calculate)
+        run_simulation_button.focus()
+        #root.bind("<Return>", self.calculate)
         
-    def calculate(self, *args):
-        try:
-            value = float(self.feet.get())
-            self.meters.set(int(0.3048 * value * 10000.0 + 0.5)/10000.0)
-        except ValueError:
-            pass
 
 root = Tk()
 NBodySolarSystem(root)
