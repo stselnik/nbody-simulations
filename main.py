@@ -151,7 +151,10 @@ class NBodySolarSystem:
                 ax.set_axis_on()
             else:
                 ax.set_axis_off()
-            
+            if (self.legend.get()):
+                ax.get_legend().set_visible(True)
+            else:
+                ax.get_legend().set_visible(False)
             if (self.dark_mode.get()):
                 ax.set_facecolor((0, 0, 0))
                 fig.set_facecolor((0,0,0))
@@ -166,6 +169,7 @@ class NBodySolarSystem:
         # Run Animation
         ani = FuncAnimation(fig, multiple_orbit, frames=np.arange(time_start, time_final * 166, dt), init_func=init, blit=False, interval=0.1, repeat=False)
         # Adjust Plot Appearance
+        ax.legend()
         ax.grid(visible=self.grid.get())
         if (self.axis.get()):
             ax.set_axis_on()
@@ -212,10 +216,13 @@ class NBodySolarSystem:
         run_simulation_button = ttk.Button(mainframe, text="Run Simulation", command=handle_simulation_button_press)
 
         self.grid = BooleanVar(value=True)
-        ttk.Checkbutton(mainframe, text="Grid", variable=self.grid, onvalue=True, offvalue=False)
+        ttk.Checkbutton(mainframe, text="Show Grid", variable=self.grid, onvalue=True, offvalue=False)
 
         self.axis = BooleanVar(value=True)
         ttk.Checkbutton(mainframe, text="Show Axis", variable=self.axis, onvalue=True, offvalue=False)
+
+        self.legend = BooleanVar(value=True)
+        ttk.Checkbutton(mainframe, text="Show Legend", variable=self.legend, onvalue=True, offvalue=False)
 
         self.dark_mode = BooleanVar(value=False)
         ttk.Checkbutton(mainframe, text="Dark (Space!) Mode", variable=self.dark_mode, onvalue=True, offvalue=False)
