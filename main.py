@@ -37,9 +37,9 @@ class NBodySolarSystem:
     # Append an entity to a systems's orbital entities list given a name, mass, and respective JPL Epehemeris / Horizon ID number to fetch it's initial conditions through the API
     def add_orbital_entity(self, name, horizon_id, mass, ax, color=""):
         # Define the time span:
-        start_time = '2025-05-17'
-        stop_time = '2025-05-18'
-
+        start_time = self.start_date.get()
+        # Stop time is just 1 day ahead, so we only retrieve the initial vectors from the starting day.
+        stop_time = (datetime.strptime(start_time, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
         url = 'https://ssd.jpl.nasa.gov/api/horizons.api'
         url += "?format=text&EPHEM_TYPE=VECTORS&OBJ_DATA=NO&CENTER='500@0'"
         url += "&COMMAND='{}'&VEC_TABLE='2'&START_TIME='{}'&STOP_TIME='{}'&STEP_SIZE='2d'".format(horizon_id, start_time, stop_time)
@@ -144,11 +144,40 @@ class NBodySolarSystem:
             previous_date = datetime.strptime(self.simulation_time.get(), "%Y-%m-%d")
             new_date = previous_date + timedelta(days=days)
             self.simulation_time.set(new_date.strftime("%Y-%m-%d"))
+
+            # Update any changes to UI
+            ax.grid(visible=self.grid.get())
+            if (self.axis.get()):
+                ax.set_axis_on()
+            else:
+                ax.set_axis_off()
+            
+            if (self.dark_mode.get()):
+                ax.set_facecolor((0, 0, 0))
+                fig.set_facecolor((0,0,0))
+                ax.tick_params(colors='white')
+            else:
+                ax.set_facecolor("#ffffff")
+                fig.set_facecolor("#ffffff")
+                ax.tick_params(colors='black')
+                
+
             return all_entity_lines()
         # Run Animation
         ani = FuncAnimation(fig, multiple_orbit, frames=np.arange(time_start, time_final * 166, dt), init_func=init, blit=False, interval=0.1, repeat=False)
         # Adjust Plot Appearance
-        ax.legend()
+        ax.grid(visible=self.grid.get())
+        if (self.axis.get()):
+            ax.set_axis_on()
+        else:
+            ax.set_axis_off()
+        
+        if (self.dark_mode.get()):
+            ax.set_facecolor((0, 0, 0))
+            fig.set_facecolor((0,0,0))
+        else:
+            ax.set_facecolor("#ffffff")
+            fig.set_facecolor("#ffffff")
 
         plt.show(block=True)
 
@@ -161,10 +190,9 @@ class NBodySolarSystem:
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
 
-        ttk.Label(mainframe, text="Start Date")
-        self.date = StringVar()
-        date_entry = DateEntry(mainframe, width=15, textvariable=self.date, date_pattern='yyyy-mm-dd')
-        ttk.Label(mainframe, textvariable=self.date)
+        ttk.Label(mainframe, text="Start Date (1900-2199)")
+        self.start_date = StringVar()
+        start_date_entry = DateEntry(mainframe, width=15, textvariable=self.start_date, date_pattern='yyyy-mm-dd')
 
         ttk.Label(mainframe, text="Number of Interval Iterations per Frame (days):")
         self.iterations = IntVar(value=10)
@@ -178,9 +206,20 @@ class NBodySolarSystem:
 
         def handle_simulation_button_press():
             run_simulation_button.config(state='disabled')
-            self.create_simulation(start_date=self.date.get())
+            start_date_entry.config(state='disabled')
+            self.create_simulation(start_date=self.start_date.get())
 
         run_simulation_button = ttk.Button(mainframe, text="Run Simulation", command=handle_simulation_button_press)
+
+        self.grid = BooleanVar(value=True)
+        ttk.Checkbutton(mainframe, text="Grid", variable=self.grid, onvalue=True, offvalue=False)
+
+        self.axis = BooleanVar(value=True)
+        ttk.Checkbutton(mainframe, text="Show Axis", variable=self.axis, onvalue=True, offvalue=False)
+
+        self.dark_mode = BooleanVar(value=False)
+        ttk.Checkbutton(mainframe, text="Dark (Space!) Mode", variable=self.dark_mode, onvalue=True, offvalue=False)
+
 
         ttk.Label(mainframe, text="Date in Simulation:").grid(column=1)
         ttk.Label(mainframe, textvariable=self.simulation_time).grid(column=1)
